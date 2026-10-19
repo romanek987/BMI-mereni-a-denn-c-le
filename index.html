@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitPulse – BMI & Denní Cíle Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Canvas pro oslavné konfety -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="app-layout">
+    <!-- Horní navigace a hlavička -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>FitPulse</h1>
+          <p class="tagline">BMI kalkulačka &amp; Denní cíle</p>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="date-badge" id="current-date-display">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span id="date-string">Dnes</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="sound-toggle-btn" class="icon-btn" title="Zvukové efekty" aria-label="Přepnout zvuk">
+          <svg id="sound-icon-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="sound-icon-off" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+
+        <button id="theme-toggle-btn" class="icon-btn" title="Přepnout tmavý / světlý režim" aria-label="Přepnout motiv">
+          <svg id="theme-icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg id="theme-icon-moon" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Hlavní navigační lišta záložek -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="nav-tab active" data-tab="tab-dashboard" role="tab" aria-selected="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Denní Cíle</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-bmi" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 6v6l4 2"></path>
+        </svg>
+        <span>BMI &amp; Kondice</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-history" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        <span>Historie &amp; Grafy</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-tips" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+        </svg>
+        <span>Úspěchy &amp; Tipy</span>
+      </button>
+    </nav>
+
+    <!-- Hlavní obsah -->
+    <main class="app-main">
+      
+      <!-- ============================================== -->
+      <!-- ZÁLOŽKA 1: DENNÍ CÍLE & NÁVYKY -->
+      <!-- ============================================== -->
+      <section id="tab-dashboard" class="tab-pane active" role="tabpanel">
+        
+        <!-- Přehledový banner dne -->
+        <div class="dashboard-hero">
+          <div class="hero-progress-box">
+            <div class="circular-progress-wrap">
+              <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
+                <circle class="progress-ring-bg" cx="60" cy="60" r="50"></circle>
+                <circle class="progress-ring-fill" id="daily-progress-ring" cx="60" cy="60" r="50"></circle>
+              </svg>
+              <div class="progress-ring-text">
+                <span class="percentage" id="daily-percentage-label">0%</span>
+                <span class="subtext">splněno</span>
+              </div>
+            </div>
+            <div class="hero-stats">
+              <h2 id="greeting-title">Dobrý den!</h2>
+              <p class="hero-desc" id="hero-progress-desc">Dnes máte splněno 0 z 0 cílů. Pojďme na to!</p>
+              <div class="stats-pills">
+                <div class="stat-pill">
+                  <span class="pill-icon">🔥</span>
+                  <span class="pill-val" id="streak-count-display">0 dnů</span>
+                  <span class="pill-lbl">Aktivní šňůra</span>
+                </div>
+                <div class="stat-pill">
+                  <span class="pill-icon">⚖️</span>
+                  <span class="pill-val" id="quick-bmi-display">--</span>
+                  <span class="pill-lbl">Aktuální BMI</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rychlý tracker pitného režimu -->
+          <div class="water-tracker-card card">
+            <div class="card-header">
+              <div class="title-with-icon">
+                <span class="card-icon water-icon">💧</span>
+                <div>
+                  <h3>Pitný režim</h3>
+                  <p class="card-sub" id="water-ml-display">0 z 2000 ml</p>
+                </div>
+              </div>
+              <span class="badge" id="water-percent-badge">0%</span>
+            </div>
+            
+            <div class="water-glasses-grid" id="water-glasses-container">
+              <!-- Sklenice budou generovány dynamicky -->
+            </div>
+
+            <div class="water-controls">
+              <button class="btn btn-secondary btn-sm" id="btn-water-minus" title="Odebrat sklenici (-250 ml)">- 250 ml</button>
+              <button class="btn btn-primary btn-sm" id="btn-water-plus" title="Přidat sklenici (+250 ml)">+ 250 ml vody</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seznam cílů -->
+        <div class="goals-section">
+          <div class="goals-toolbar">
+            <div class="toolbar-title">
+              <h3>Dnešní zdravé návyky &amp; cíle</h3>
+              <p class="text-muted">Klikněte na splněný úkol pro odškrtnutí</p>
+            </div>
+            <div class="toolbar-actions">
+              <div class="filter-pills" id="goals-filter-group">
+                <button class="filter-pill active" data-filter="all">Vše</button>
+                <button class="filter-pill" data-filter="fitness">Pohyb</button>
+                <button class="filter-pill" data-filter="nutrition">Strava</button>
+                <button class="filter-pill" data-filter="mindset">Mindset</button>
+              </div>
+              <button class="btn btn-primary" id="open-add-goal-modal-btn">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Přidat cíl</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Kontejner položek cílů -->
+          <div class="goals-list" id="goals-list-container">
+            <!-- Dynamicky generováno -->
+          </div>
+
+          <!-- Karta motivace dne -->
+          <div class="daily-quote-card card">
+            <div class="quote-icon">💡</div>
+            <div class="quote-body">
+              <h4 id="daily-quote-title">Tip pro dnešní den</h4>
+              <p id="daily-quote-text">Malé denní kroky vedou k velkým a trvalým změnám. Začněte jedním zvykem!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- ZÁLOŽKA 2: BMI KALKULAČKA & DETAILNÍ KONDICE -->
+      <!-- ============================================== -->
+      <section id="tab-bmi" class="tab-pane" role="tabpanel">
+        <div class="bmi-grid">
+          <!-- Vstupní formulář -->
+          <div class="card bmi-form-card">
+            <div class="card-header">
+              <div class="title-with-icon">
+                <span class="card-icon">📏</span>
+                <div>
+                  <h3>Zadání tělesných parametrů</h3>
+                  <p class="card-sub">Spočítejte své BMI, BMR a kalorickou potřebu</p>
+                </div>
+              </div>
+            </div>
+
+            <form id="bmi-form" class="app-form" onsubmit="return false;">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bmi-gender">Pohlaví</label>
+                  <div class="segmented-control">
+                    <label class="segment-label">
+                      <input type="radio" name="gender" value="male" checked id="gender-male">
+                      <span class="segment-btn">Muž 👨</span>
+                    </label>
+                    <label class="segment-label">
+                      <input type="radio" name="gender" value="female" id="gender-female">
+                      <span class="segment-btn">Žena 👩</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="bmi-age">Věk (roky)</label>
+                  <div class="input-with-unit">
+                    <input type="number" id="bmi-age" min="10" max="120" value="28" required>
+                    <span class="unit">let</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bmi-height">Tělesná výška (cm)</label>
+                  <div class="input-with-unit">
+                    <input type="number" id="bmi-height" min="100" max="250" value="175" step="0.5" required>
+                    <span class="unit">cm</span>
+                  </div>
+                  <input type="range" id="bmi-height-range" min="120" max="220" value="175" class="slider-control">
+                </div>
+
+                <div class="form-group">
+                  <label for="bmi-weight">Tělesná hmotnost (kg)</label>
+                  <div class="input-with-unit">
+                    <input type="number" id="bmi-weight" min="30" max="250" value="72" step="0.1" required>
+                    <span class="unit">kg</span>
+                  </div>
+                  <input type="range" id="bmi-weight-range" min="35" max="160" value="72" step="0.5" class="slider-control">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="bmi-activity">Denní úroveň fyzické aktivity</label>
+                <select id="bmi-activity" class="form-select">
+                  <option value="1.2">Sedavý způsob (téměř žádný pohyb, kancelář)</option>
+                  <option value="1.375">Lehká aktivita (lehké cvičení 1-3 dny v týdnu)</option>
+                  <option value="1.55" selected>Střední aktivita (sport/cvičení 3-5 dní v týdnu)</option>
+                  <option value="1.725">Vysoká aktivita (intenzivní trénink 6-7 dní v týdnu)</option>
+                  <option value="1.9">Extrémní zátěž (fyzická práce + 2x denně trénink)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="bmi-note">Poznámka k měření (volitelné)</label>
+                <input type="text" id="bmi-note" class="form-input" placeholder="např. po ranním běhu, nalačno...">
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn btn-primary btn-block" id="btn-save-measurement">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  <span>Uložit měření do historie</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Výsledky a vizualizace BMI -->
+          <div class="bmi-results-column">
+            <!-- Hlavní karta výsledku -->
+            <div class="card bmi-result-card">
+              <div class="bmi-score-header">
+                <div>
+                  <span class="bmi-badge-category" id="bmi-category-badge">Normální váha</span>
+                  <h2 class="bmi-number" id="bmi-value-display">23.5</h2>
+                  <p class="bmi-desc-text" id="bmi-summary-text">Vaše váha spadá do optimálního zdravého rozmezí.</p>
+                </div>
+                <div class="bmi-ideal-range-box">
+                  <span class="ideal-label">Doporučená zdravá váha:</span>
+                  <span class="ideal-value" id="ideal-weight-range-display">56.7 – 76.3 kg</span>
+                  <span class="ideal-diff" id="ideal-diff-display">Jste v ideálním pásmu 🎉</span>
+                </div>
+              </div>
+
+              <!-- BMI grafické měřidlo / Gauge Bar -->
+              <div class="bmi-gauge-wrapper">
+                <div class="bmi-gauge-track">
+                  <div class="gauge-segment seg-under" title="Podváha (< 18.5)"></div>
+                  <div class="gauge-segment seg-normal" title="Normální váha (18.5 – 24.9)"></div>
+                  <div class="gauge-segment seg-over" title="Nadváha (25.0 – 29.9)"></div>
+                  <div class="gauge-segment seg-obese1" title="Obezita I. st. (30.0 – 34.9)"></div>
+                  <div class="gauge-segment seg-obese2" title="Obezita II. st. (35.0 – 39.9)"></div>
+                  <div class="gauge-segment seg-obese3" title="Těžká obezita (>= 40.0)"></div>
+                  <!-- Ukazatel / Marker -->
+                  <div class="bmi-gauge-needle" id="bmi-gauge-needle" style="left: 35%;">
+                    <div class="needle-arrow"></div>
+                    <span class="needle-tag" id="needle-value-tag">23.5</span>
+                  </div>
+                </div>
+                <div class="gauge-labels">
+                  <span>16</span>
+                  <span>18.5</span>
+                  <span>25</span>
+                  <span>30</span>
+                  <span>35</span>
+                  <span>40+</span>
+                </div>
+              </div>
+
+              <!-- Klasifikace tabulka -->
+              <div class="bmi-legend-grid">
+                <div class="legend-item" data-cat="underweight">
+                  <span class="legend-dot dot-under"></span>
+                  <span class="legend-title">&lt; 18.5</span>
+                  <span class="legend-name">Podváha</span>
+                </div>
+                <div class="legend-item" data-cat="normal">
+                  <span class="legend-dot dot-normal"></span>
+                  <span class="legend-title">18.5 – 24.9</span>
+                  <span class="legend-name">Normální</span>
+                </div>
+                <div class="legend-item" data-cat="overweight">
+                  <span class="legend-dot dot-over"></span>
+                  <span class="legend-title">25.0 – 29.9</span>
+                  <span class="legend-name">Nadváha</span>
+                </div>
+                <div class="legend-item" data-cat="obesity">
+                  <span class="legend-dot dot-obese"></span>
+                  <span class="legend-title">30.0+</span>
+                  <span class="legend-name">Obezita</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Doplňkové metabolické metriky -->
+            <div class="metabolic-metrics-grid">
+              <div class="metric-card card">
+                <div class="metric-icon">🔥</div>
+                <div class="metric-content">
+                  <span class="metric-label">Bazální metabolismus (BMR)</span>
+                  <h4 class="metric-val" id="bmr-value-display">1 680 kcal</h4>
+                  <p class="metric-hint">Energie spálená v absolutním klidu za den</p>
+                </div>
+              </div>
+
+              <div class="metric-card card">
+                <div class="metric-icon">⚡</div>
+                <div class="metric-content">
+                  <span class="metric-label">Celkový denní výdej (TDEE)</span>
+                  <h4 class="metric-val" id="tdee-value-display">2 604 kcal</h4>
+                  <p class="metric-hint">Udržovací kalorický příjem při daném pohybu</p>
+                </div>
+              </div>
+
+              <div class="metric-card card">
+                <div class="metric-icon">🎯</div>
+                <div class="metric-content">
+                  <span class="metric-label">Cíl pro hubnutí (-500 kcal)</span>
+                  <h4 class="metric-val text-success" id="loss-cal-display">2 104 kcal</h4>
+                  <p class="metric-hint">Zdravé a udržitelné tempo hubnutí ~0.5 kg/týden</p>
+                </div>
+              </div>
+
+              <div class="metric-card card">
+                <div class="metric-icon">💧</div>
+                <div class="metric-content">
+                  <span class="metric-label">Doporučený denní příjem tekutin</span>
+                  <h4 class="metric-val text-cyan" id="water-rec-display">2.5 – 3.0 l</h4>
+                  <p class="metric-hint">Přibližně 35-40 ml na každý kg tělesné váhy</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- ZÁLOŽKA 3: HISTORIE & GRAFICKÝ PŘEHLED -->
+      <!-- ============================================== -->
+      <section id="tab-history" class="tab-pane" role="tabpanel">
+        
+        <!-- Přehledové statistiky vývoje -->
+        <div class="stats-overview-grid">
+          <div class="stat-card card">
+            <span class="stat-icon">📅</span>
+            <span class="stat-lbl">Počáteční váha</span>
+            <h3 class="stat-num" id="stat-start-weight">-- kg</h3>
+            <span class="stat-sub" id="stat-start-date">Zatím bez dat</span>
+          </div>
+
+          <div class="stat-card card">
+            <span class="stat-icon">⚖️</span>
+            <span class="stat-lbl">Aktuální váha</span>
+            <h3 class="stat-num" id="stat-current-weight">-- kg</h3>
+            <span class="stat-sub" id="stat-current-bmi">BMI: --</span>
+          </div>
+
+          <div class="stat-card card">
+            <span class="stat-icon">📊</span>
+            <span class="stat-lbl">Celková změna</span>
+            <h3 class="stat-num" id="stat-diff-weight">0.0 kg</h3>
+            <span class="stat-sub" id="stat-diff-desc">stabilní</span>
+          </div>
+
+          <div class="stat-card card">
+            <span class="stat-icon">🏆</span>
+            <span class="stat-lbl">Zaznamenaných měření</span>
+            <h3 class="stat-num" id="stat-total-records">0</h3>
+            <span class="stat-sub">v historii</span>
+          </div>
+        </div>
+
+        <!-- Interaktivní graf hmotnosti a BMI -->
+        <div class="card chart-card">
+          <div class="chart-header">
+            <div>
+              <h3>Graf vývoje tělesné váhy &amp; BMI</h3>
+              <p class="card-sub">Vývoj váhy s vyznačeným zdravým BMI pásmem</p>
+            </div>
+            <div class="chart-actions">
+              <span class="chart-legend-pill">
+                <span class="color-dot dot-weight"></span> Váha (kg)
+              </span>
+              <span class="chart-legend-pill">
+                <span class="color-dot dot-bmi-line"></span> BMI
+              </span>
+            </div>
+          </div>
+          <div class="canvas-container">
+            <canvas id="weight-history-chart" width="900" height="320"></canvas>
+            <div class="chart-empty-state" id="chart-empty-placeholder">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 3v18h18"></path>
+                <path d="m19 9-5 5-4-4-3 3"></path>
+              </svg>
+              <p>Zatím nemáte dostatek záznamů pro zobrazení grafu.</p>
+              <button class="btn btn-sm btn-secondary" onclick="document.querySelector('[data-tab=\'tab-bmi\']').click()">Uložit první měření</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabulka historie záznamů -->
+        <div class="card history-table-card">
+          <div class="card-header">
+            <div>
+              <h3>Záznamy měření</h3>
+              <p class="card-sub">Seznam vašich uložených vah a BMI hodnot</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-export-data" title="Stáhnout data jako zálohu">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Zálohovat (JSON)</span>
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Datum a čas</th>
+                  <th>Hmotnost</th>
+                  <th>Výška</th>
+                  <th>BMI</th>
+                  <th>Kategorie</th>
+                  <th>Poznámka</th>
+                  <th class="text-right">Akce</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body">
+                <!-- Dynamicky generováno -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- ZÁLOŽKA 4: ÚSPĚCHY, TIPY & NASTAVENÍ -->
+      <!-- ============================================== -->
+      <section id="tab-tips" class="tab-pane" role="tabpanel">
+        <div class="tips-grid">
+          
+          <!-- Odznaky a úspěchy (Badges) -->
+          <div class="card achievements-card">
+            <div class="card-header">
+              <div class="title-with-icon">
+                <span class="card-icon">🏆</span>
+                <div>
+                  <h3>Získané odznaky</h3>
+                  <p class="card-sub" id="badges-unlocked-summary">Odemčeno 0 z 8 odznaků</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="achievements-grid" id="achievements-container">
+              <!-- Dynamicky generováno -->
+            </div>
+          </div>
+
+          <!-- Zdravotní a výživové tipy -->
+          <div class="card health-tips-card">
+            <div class="card-header">
+              <div class="title-with-icon">
+                <span class="card-icon">🍏</span>
+                <div>
+                  <h3>Zdravé tipy a doporučení</h3>
+                  <p class="card-sub">Ověřené zásady pro zdraví a hubnutí</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="tips-accordion">
+              <details class="tip-item" open>
+                <summary>
+                  <span class="tip-sum-icon">🥗</span>
+                  <strong>Pravidlo zdravého talíře</strong>
+                </summary>
+                <div class="tip-content">
+                  Polovinu každého hlavního talíře by měla tvořit pestrá zelenina (vláknina, vitamíny), čtvrtinu kvalitní bílkoviny (kuřecí, ryby, vejce, luštěniny, tofu) a zbývající čtvrtinu komplexní sacharidy (brambory, rýže, ovesné vločky, celozrnné pečivo).
+                </div>
+              </details>
+
+              <details class="tip-item">
+                <summary>
+                  <span class="tip-sum-icon">💧</span>
+                  <strong>Proč je pitný režim klíčový pro metabolismus?</strong>
+                </summary>
+                <div class="tip-content">
+                  I mírná dehydratace (1–2 %) zpomaluje spalování tuků a snižuje koncentraci i fyzický výkon. Hlad je často jen převlečená žízeň – sklenice vody před jídlem přirozeně podpoří trávení i sytost.
+                </div>
+              </details>
+
+              <details class="tip-item">
+                <summary>
+                  <span class="tip-sum-icon">🚶</span>
+                  <strong>Magie přirozeného pohybu (NEAT)</strong>
+                </summary>
+                <div class="tip-content">
+                  Většinu denního kalorického výdeje netvoří samotné fitko, ale běžný pohyb (chůze do schodů, úklid, stání). Cíl 8 000 až 10 000 kroků denně je nejlepší prevencí kardiovaskulárních onemocnění.
+                </div>
+              </details>
+
+              <details class="tip-item">
+                <summary>
+                  <span class="tip-sum-icon">😴</span>
+                  <strong>Spánek a hormonální rovnováha</strong>
+                </summary>
+                <div class="tip-content">
+                  Nedostatek spánku zvyšuje hladinu hormonu ghrelinu (který vyvolává chuť na sladké a tučné) a snižuje leptin (hormon nasycení). 7 až 8 hodin kvalitního spánku je pro regulaci hmotnosti stejně důležitých jako cvičení.
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <!-- Správa dat & Nastavení aplikace -->
+          <div class="card settings-card">
+            <div class="card-header">
+              <div class="title-with-icon">
+                <span class="card-icon">⚙️</span>
+                <div>
+                  <h3>Nastavení &amp; Správa dat</h3>
+                  <p class="card-sub">Data jsou bezpečně uložena lokálně ve vašem prohlížeči</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <div class="setting-item">
+                <div class="setting-info">
+                  <strong>Export zálohy</strong>
+                  <p class="text-muted">Uloží všechna měření a cíle do souboru pro případ obnovy.</p>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="btn-export-backup">Zálohovat JSON</button>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <strong>Obnovení ze zálohy</strong>
+                  <p class="text-muted">Nahraje uložená data z předchozího exportu.</p>
+                </div>
+                <label class="btn btn-secondary btn-sm file-upload-btn">
+                  <span>Nahrát soubor</span>
+                  <input type="file" id="import-file-input" accept=".json" class="hidden-input">
+                </label>
+              </div>
+
+              <div class="setting-item danger-border">
+                <div class="setting-info">
+                  <strong class="text-danger">Vymazat všechna data</strong>
+                  <p class="text-muted">Resetuje aplikaci do výchozího stavu.</p>
+                </div>
+                <button class="btn btn-danger btn-sm" id="btn-reset-data">Vymazat data</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Spodní patička -->
+    <footer class="app-footer">
+      <p>FitPulse &copy; 2026 – Váš osobní zdravotní parťák. Data jsou uložena výhradně lokálně ve vašem prohlížeči.</p>
+    </footer>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODÁLNÍ OKNO: PŘIDÁNÍ NOVÉHO CÍLE -->
+  <!-- ============================================== -->
+  <div class="modal-overlay hidden" id="add-goal-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="title-with-icon">
+          <span class="card-icon">✨</span>
+          <h3>Přidat nový denní cíl</h3>
+        </div>
+        <button class="icon-btn modal-close-btn" id="btn-close-modal" aria-label="Zavřít">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form id="add-goal-form" class="modal-body" onsubmit="return false;">
+        <div class="form-group">
+          <label for="new-goal-title">Název cíle / návyku</label>
+          <input type="text" id="new-goal-title" class="form-input" placeholder="např. 10 000 kroků nebo Čtení knihy" required>
+        </div>
+
+        <div class="form-group">
+          <label for="new-goal-desc">Podtitulek / Detail (volitelné)</label>
+          <input type="text" id="new-goal-desc" class="form-input" placeholder="např. Alespoň 30 minut venku na čerstvém vzduchu">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="new-goal-category">Kategorie</label>
+            <select id="new-goal-category" class="form-select">
+              <option value="fitness">🏃 Pohyb a sport</option>
+              <option value="nutrition">🥗 Zdravá strava</option>
+              <option value="mindset">🧘 Mindset &amp; Spánek</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Ikona</label>
+            <div class="emoji-picker-row" id="emoji-picker">
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="🏃" checked><span>🏃</span></label>
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="🚶"><span>🚶</span></label>
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="🥗"><span>🥗</span></label>
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="🍎"><span>🍎</span></label>
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="😴"><span>😴</span></label>
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="🧘"><span>🧘</span></label>
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="💪"><span>💪</span></label>
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="🚴"><span>🚴</span></label>
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="📖"><span>📖</span></label>
+              <label class="emoji-opt"><input type="radio" name="goal-emoji" value="💊"><span>💊</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Zrušit</button>
+          <button type="button" class="btn btn-primary" id="btn-confirm-add-goal">Vytvořit cíl</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast notifikace -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
