@@ -1,0 +1,2 @@
+# FitPulse Web Service - Render.com requirements
+# Aplikace používá vestavěný HTTP server v Pythonu bez nutnosti dalších knihoven.
